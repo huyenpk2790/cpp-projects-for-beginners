@@ -1,0 +1,52 @@
+/*This cpp code is based on Hackerrank's sample full-stack developer hiring test.
+
+Problem description: Alex wants to purchase many passes to visit the museum. The administrators do not sell group passes, 
+and are providing only one pass at a time. If a visitor needs more than one pass, he/she has to pass through the queue again 
+to reach the counter and buy the next pass. Considering that the number of passes each visitor needs is known, write funtion waitingTime
+to calculate the units of time Alex require to buy all passes? Alex's place in the queue to the counter will be given, 
+and each transaction takes 1 unit of time. The time needed to go to the back of the line each time can be ignored.
+
+waitingTime accepts these as parameters: a vector of tickets desired by each visitor at position tickets[i], Alex's position in line.
+The function should return an integer representing the units of time Alex needs to buy all the desired passes.*/
+
+#include <iostream>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+ostream& operator<< (ostream& os, vector<int> vec){ //print elements in a vector
+	os<<"{";
+    for(size_t i = 0; i < vec.size(); ++i) {
+        os << vec[i];
+        if (i != vec.size()-1)
+            os << ", ";
+    }
+    os << "}";
+    return os;
+}
+
+long waitingTime(int tickets_count, vector<int> tickets, unsigned int p) {
+    long unit=0;
+    while (tickets[p]>0){
+		for (unsigned int i=0;i<tickets.size();i++){
+			if (tickets[p]>0){ //check again: if p=0 end for loop and give final unit
+				tickets[i]--;
+				unit++;
+				tickets_count--;
+				cout<<tickets<<endl;
+				if (tickets[i]<=0 && i!=p){
+					tickets.erase(tickets.begin()+(i-1)); //if no more tickets wanted, erase element from vector (remove visitor from line)
+					if (i<p){p--;}
+					i--;
+					cout<<tickets<<endl;}
+				if (tickets_count<=0){cout<<"Error! No tickets left."<<endl; break;}
+			} else break;
+		}}
+    return unit;
+}
+
+int main() {
+	cout<<waitingTime(30,{2,6,3,4,5},2); //sample test case
+	return 0;
+}
