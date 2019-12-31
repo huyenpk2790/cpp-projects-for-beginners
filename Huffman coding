@@ -1,0 +1,120 @@
+/* Perform Huffman coding algorithm: encode variable-length string into a bit string based on the characters' frequency
+   and decode the output bit string.*/
+
+#include <iostream>
+#include <string>
+#include <queue>
+#include <unordered_map>
+using namespace std;
+
+struct Node {
+	char letter;
+	int frequency;
+	Node* left;
+	Node* right;
+};
+
+Node* newNode(char chr, int freq, Node* a, Node* b);
+void Traverse(Node* root, string bit, unordered_map<char, string>& Code);
+void HuffmanCode(string str);
+string Decode(string line, unordered_map<char, string>& Code);
+
+int main() {
+	string str;
+	cout<<"Enter your string: "<<endl;
+	getline(cin, str);
+	HuffmanCode(str);
+}
+
+//Create a new node (pointer) for Huffman tree
+Node* newNode(char chr, int freq, Node* a, Node* b) {
+	Node* node = new Node();
+	node->letter = chr;
+	node->frequency = freq;
+	node->left = a;
+	node->right = b;
+	return node;
+}
+
+//Traverse Huffman tree and store bit code for each letter in map Code
+void Traverse(Node* root, string bit, unordered_map<char, string>& Code) {
+	//If root is null (reach end of tree), stop traversing
+	if (root == nullptr) return;
+	//If node is leaf, stop traversing and store code in map
+	if (root->left == nullptr && root->right == nullptr) {
+		Code[root->letter] = bit;
+	} else {
+		//Continue traversing left & right nodes
+		Traverse(root->left, bit + "0", Code);
+		Traverse(root->right, bit + "1", Code);
+	}
+}
+
+//Traverse each char in line to find original string based on map Code
+string Decode(string line, unordered_map<char, string>& Code) {
+	string final;
+	while (line != "") {
+		//stat: condition to continue/exit current loop
+		int stat = 0;
+		//part: bit code for each char in line
+		string part = "";
+		for (char chr: line) {
+			//Exit current for loop if found letter for part in Code
+			if (stat) break;
+			part += chr;
+			for (auto pair: Code) {
+				if (part == pair.second) {
+					final += pair.first;
+					//Start traversing char after prev decoded bit code
+					line.erase(0, part.size());
+					//Start from next iteration of while loop
+					stat = 1;
+					break;
+				}
+			}
+		}
+	}
+	return final;
+}
+
+//Compare operator for Tree queue
+struct Comp {
+	bool operator()(Node* a, Node* b) {
+		//Lowest frequency becomes top of Tree queue
+		return a->frequency > b->frequency;
+	}
+};
+
+void HuffmanCode(string str) {
+	unordered_map<char, int> Freq;
+	//Store frequency of each letter in map Freq
+	for (char chr: str) ++Freq[chr];
+	priority_queue<Node*, vector<Node*>, Comp> Tree;
+	//Create node for each letter in Freq map and store pointer in Tree queue
+	for (auto pair: Freq) {
+		Tree.push(newNode(pair.first, pair.second, nullptr, nullptr));
+	}
+	//Add 2 lowest frequencies together to create Huffman tree until Tree queue only has root element
+	while (Tree.size() > 1) {
+		Node* left = Tree.top();
+		Tree.pop();
+		Node* right = Tree.top();
+		Tree.pop();
+		int sum = left->frequency + right->frequency;
+		Tree.push(newNode('\0', sum, left, right));
+	}
+	//Store root as only element (top) of tree
+	Node* root = Tree.top();
+	unordered_map<char, string> Code;
+	//Traverse Huffman tree to store code in map Code
+	Traverse(root, "", Code);
+	//Print code for each letter in Code map
+	cout<<"Huffman Codes: "<<endl;
+	for (auto pair: Code) cout<<pair.first<<": "<<pair.second<<endl;
+	//Print encoded string
+	string line;
+	for (char chr: str) line += Code[chr];
+	cout<<"Encoded string: "<<line<<endl;
+	//Print decoded string
+	cout<<"Decoded string: "<<Decode(line, Code)<<endl;
+}
